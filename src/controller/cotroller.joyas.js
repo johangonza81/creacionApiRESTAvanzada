@@ -1,23 +1,26 @@
 import pool from "../database2/db.js";
-import pgFormat from 'pg-format';
+import HATEOAS from "../halper/hateoas.js"
+
+
+import {getJoyasLimitadas,getJoyaMinMax,getJoyasHeteoas} from "../models/models.js"
+
+
 
 export const getJoyas = async (req,res) =>{
-  
-  const{limits = 10, order_by:orderBy ='stock_ASC', page = 0} = req.query;
- 
-  const [column,sort] = orderBy.split('_')
-  const offset =  page > 0 ? (page - 1) * limits : 0;
-    
-    try { 
-      const query = pgFormat('SELECT * FROM inventario ORDER BY %I %s LIMIT %L OFFSET %L',
-      column,
-      sort.toUpperCase(),
-      limits,
-      offset
-      );
+  try { 
+    const result= await getJoyasHeteoas(req);
+    const getJoyaswithHeteoas = await HATEOAS('joyas', result)
+    res.status(200).json({joya:getJoyaswithHeteoas})
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 
-      const result = await pool.query(query);
-      res.json(result.rows);
+}
+
+export const getJoyas1 = async (req,res) =>{
+    try { 
+      const result= await getJoyasLimitadas(req,res);
+      res.status(200).json({joyas:result})
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
@@ -25,59 +28,15 @@ export const getJoyas = async (req,res) =>{
 
 
   export const getJoyas2 = async (req,res) =>{
-  
-    const{
-      limits = 10, 
-      order_by:orderBy ='stock_ASC',
-      page = 0,
-      precio_min:precioMin,
-      precio_max:precioMax,
-      categoria,
-      metal
-      } = req.query;
+    try { 
+      const result= await getJoyaMinMax(req,res);
+      res.status(200).json(result)
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
    
-    const [column,sort] = orderBy.split('_')
-    const offset =  page > 0 ? (page - 1) * limits : 0;
-
-
-  const conditions = [];
-
-  if (precioMin !== undefined && precioMin !== null && precioMin !=='') {
-    conditions.push(pgFormat('precio >= %L', precioMin));
-  }
-
-  if (precioMax !== undefined && precioMax !== null && precioMax !=='')  {
-    conditions.push(pgFormat('precio <= %L', precioMax));
-  }
-
-  if (categoria)  {
-    conditions.push(pgFormat('categoria = %L', categoria));
-  }
-
-  if (metal)  {
-    conditions.push(pgFormat('metal = %L', metal));
-  }
-
-  let whereClause = '';
-  if(conditions.length > 0) {
-  whereClause =`WHERE ${conditions.join(' AND ')}`;
-  } 
-      
-      try { 
-        const query = pgFormat('SELECT * FROM inventario %s ORDER BY %I %s LIMIT %L OFFSET %L',
-        whereClause,
-        column,
-        sort.toUpperCase(),
-        limits,
-        offset
-        );
-  
-        const result = await pool.query(query);
-        res.json(result.rows);
-      } catch (error) {
-        res.status(500).json({ message: error.message });
-      }
-    };
+    
 
   
   export const agregarJoyas = async (req, res) => {
@@ -139,6 +98,9 @@ export const getJoyas = async (req,res) =>{
       res.status(500).json({ message: error.message });
     }
   };
+
+
+
 
 
   export const notFund = (req,res) => res.status(404).json({ message: 'Route not found' });

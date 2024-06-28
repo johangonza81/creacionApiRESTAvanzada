@@ -6,16 +6,17 @@ import * as controller  from '../controller/cotroller.joyas.js';
 
 const router = express.Router();
 
-
+  // Obtener todos las joyas
+ router.get('/joyas', joyasLog,controller.getJoyas) 
 
   // Obtener todos las joyas
-  router.get('/joyas', joyasLog,controller.getJoyas)
+  router.get('/joyas/limits', joyasLog,controller.getJoyas1)
 
   // Obtener todos las joyas filtradas
   router.get('/joyas/filtros', joyasLog,controller.getJoyas2)
   
   // Crear una nueva joya
-  router.post('/joyas', joyasLog,controller.agregarJoyas)
+  router.post('/joyas/agregar', joyasLog,controller.agregarJoyas)
  
   
   // Modificar una joya
