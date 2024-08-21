@@ -31,3 +31,5 @@ const router = express.Router();
   router.all('*',controller.notFund)
   
  export default router;
+
+ PORT=3000
